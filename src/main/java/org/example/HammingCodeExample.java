@@ -32,7 +32,6 @@ public class HammingCodeExample {
         }
 
         receiveAndCorrectData(hammingCode, data.length);
-
         scanner.close();
     }
 
@@ -59,7 +58,7 @@ public class HammingCodeExample {
         }
         System.out.println();
     }
-    
+
     // Method to generate Hamming code
     private static int[] generateHammingCode(int[] data) {
         int dataSize = data.length;
