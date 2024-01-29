@@ -1,4 +1,7 @@
 # HammingCodeExample
+
+01 Concurrency - Programming Task - Lecture CW 41 & 42
+--
 Create HammingCodeExample class to implement the Hamming Code functionality in Java
 --
 Hamming code is a special code in a Computer network, which is a set of error-correction codes. 
