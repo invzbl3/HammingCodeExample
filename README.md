@@ -28,5 +28,7 @@ All operations should block if the respective input queue runs out of data. Henc
 
 After finishing your implementation compare the generated output with the example output given at the top. Can you spot any differences? If yes, can you explain where those come from? Be aware that a correct implementation will always generate Hamming numbers. So if the spotted differences are that there are non Hamming numbers in your output than your implementation simply has a bug. Here we are interested in some other kind of difference like duplicates or unexpected orders. 
 
-Supporting reproduction resources on which the research was based:
+----------------------------------------------------------------------
+
+**Supporting reproduction resources on which the research was based**:    
 https://www.javatpoint.com/hamming-code-in-java
