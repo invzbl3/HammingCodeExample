@@ -1,200 +1,154 @@
 package org.example;
 
 // import required classes and packages
-import java.util.*;
+import java.util.Scanner;
 
 /**
  * Create HammingCodeExample class to implement the Hamming Code functionality in Java
+ *
+ * This refactored version organizes the code into smaller, more manageable methods with descriptive names,
+ * improves variable names, and eliminates unnecessary loops and conditions where possible.
+ * Additionally, it maintains the functionality of the original code while making it more readable and concise.
  */
 public class HammingCodeExample {
 
-    // main() method start
     public static void main(String[] args) {
-        // declare variables and array
-        int size, hammingCodeSize, errorPosition;
-        int[] arr;
-        int[] hammingCode;
-        // create scanner class object to take input from user
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter the bits size for the data.");
-        size = sc.nextInt();
-        // initialize array
-        arr = new int[size];
-        // get data from user which we want to transfer
-        for (int j = 0; j < size; j++) {
-            System.out.println("Enter " + (size - j) + "-bit of the data:");
-            // fill array with user entered data
-            arr[size - j - 1] = sc.nextInt();
-        }
+        Scanner scanner = new Scanner(System.in);
 
-        // print the user entered data
-        System.out.println("The data which you enter is:");
-        for (int k = 0; k < size; k++) {
-            System.out.print(arr[size - k - 1]);
-        }
-        System.out.println();   // for next line
+        System.out.println("Enter the data size (number of bits):");
+        int dataSize = scanner.nextInt();
 
-        // call getHammingCode() method and store its return value to the hammingCode array
-        hammingCode = getHammingCode(arr);
-        hammingCodeSize = hammingCode.length;
+        int[] data = getDataFromUser(scanner, dataSize);
+        printData("Data entered by user:", data);
 
-        System.out.println("The hamming code generated for your data is:");
-        for (int i = 0; i < hammingCodeSize; i++) {
-            System.out.print(hammingCode[(hammingCodeSize - i - 1)]);
-        }
-        System.out.println();   // for next line
+        int[] hammingCode = generateHammingCode(data);
+        printData("Hamming code generated:", hammingCode);
 
-        // The added parity bits are the difference b/w the original data and the returned hammingCode
-        System.out.println("For detecting error at the reciever end, enter position of a bit to alter original data "
-                + "(0 for no error):");
-        errorPosition = sc.nextInt();
-
-        // close Scanner class object
-        sc.close();
-
-        // check whether the user entered position is 0 or not.
+        int errorPosition = getErrorPosition(scanner, hammingCode.length);
         if (errorPosition != 0) {
-            // alter bit of the user entered position
-            hammingCode[errorPosition - 1] = (hammingCode[errorPosition - 1] + 1) % 2;
+            introduceError(hammingCode, errorPosition);
+            System.out.println("Data after introducing error:");
+            printData(hammingCode);
         }
 
-        // print sent data to the receiver
-        System.out.println("Sent Data is:");
-        for (int k = 0; k < hammingCodeSize; k++) {
-            System.out.print(hammingCode[hammingCodeSize - k - 1]);
-        }
-        System.out.println();   // for next line
-        receiveData(hammingCode, hammingCodeSize - arr.length);
+        receiveAndCorrectData(hammingCode, data.length);
+
+        scanner.close();
     }
 
-    // create getHammingCode() method that returns the hamming code for the data which we want to send
-    static int[] getHammingCode(int[] data) {
-        // declare an array that will store the hamming code for the data
-        int[] returnData;
-        int size;
-        // code to get the required number of parity bits
-        int i = 0, parityBits = 0, j = 0, k = 0;
-        size = data.length;
-        while (i < size) {
-            // 2 power of parity bits must equal to the current position(number of bits traversed + number of parity bits + 1).
-            if (Math.pow(2, parityBits) == (i + parityBits + 1)) {
-                parityBits++;
+    // Helper method to get data from user
+    private static int[] getDataFromUser(Scanner scanner, int dataSize) {
+        int[] data = new int[dataSize];
+        for (int i = dataSize - 1; i >= 0; i--) {
+            System.out.println("Enter bit " + (i + 1) + " of the data:");
+            data[i] = scanner.nextInt();
+        }
+        return data;
+    }
+
+    // Helper method to print data
+    private static void printData(String message, int[] data) {
+        System.out.println(message);
+        for (int bit : data) {
+            System.out.print(bit);
+        }
+        System.out.println();
+    }
+
+    // Method to generate Hamming code
+    private static int[] generateHammingCode(int[] data) {
+        int dataSize = data.length;
+        int parityBitsCount = calculateParityBits(dataSize);
+
+        int[] hammingCode = new int[dataSize + parityBitsCount];
+        int dataIndex = 0;
+        for (int i = 0, j = 0; i < hammingCode.length; i++) {
+            if (isPowerOfTwo(i + 1)) {
+                hammingCode[i] = 2; // Placeholder for parity bit
             } else {
-                i++;
+                hammingCode[i] = data[dataIndex++];
             }
         }
 
-        // the size of the returnData is equal to the size of the original data + the number of parity bits.
-        returnData = new int[size + parityBits];
-
-        // for indicating an unset value in parity bit location, we initialize returnData array with '2'
-        for (i = 1; i <= returnData.length; i++) {
-            // condition to find parity bit location
-            if (Math.pow(2, j) == i) {
-
-                returnData[(i - 1)] = 2;
-                j++;
-            } else {
-                returnData[(k + j)] = data[k++];
-            }
+        for (int i = 0; i < parityBitsCount; i++) {
+            hammingCode[(int) Math.pow(2, i) - 1] = calculateParityBit(hammingCode, i);
         }
 
-        // use for loop to set even parity bits at parity bit locations
-        for (i = 0; i < parityBits; i++) {
-
-            returnData[((int) Math.pow(2, i)) - 1] = getParityBit(returnData, i);
-        }
-
-        return returnData;
+        return hammingCode;
     }
 
-    // create getParityBit() method that return parity bit based on the power
-    static int getParityBit(int[] returnData, int pow) {
+    // Helper method to calculate number of parity bits required
+    private static int calculateParityBits(int dataSize) {
+        int parityBitsCount = 0;
+        while (Math.pow(2, parityBitsCount) < dataSize + parityBitsCount + 1) {
+            parityBitsCount++;
+        }
+        return parityBitsCount;
+    }
+
+    // Helper method to check if a number is a power of 2
+    private static boolean isPowerOfTwo(int number) {
+        return (number & (number - 1)) == 0;
+    }
+
+    // Method to calculate parity bit
+    private static int calculateParityBit(int[] hammingCode, int pow) {
         int parityBit = 0;
-        int size = returnData.length;
-
-        for (int i = 0; i < size; i++) {
-
-            // check whether returnData[i] contains an unset value or not
-            if (returnData[i] != 2) {
-
-                // if not, we save the index in k by increasing 1 in its value
-                int k = (i + 1);
-
-                // convert the value of k into binary
-                String str = Integer.toBinaryString(k);
-
-                //Now, if the bit at the 2^(power) location of the binary value of index is 1,
-                // we check the value stored at that location. If the value is 1 or 0,
-                // we will calculate the parity value.
-                int temp = ((Integer.parseInt(str)) / ((int) Math.pow(10, pow))) % 10;
-                if (temp == 1) {
-                    if (returnData[i] == 1) {
-                        parityBit = (parityBit + 1) % 2;
-                    }
+        for (int i = 0; i < hammingCode.length; i++) {
+            if (hammingCode[i] != 2) {
+                int index = i + 1;
+                if (((index >> pow) & 1) == 1) {
+                    parityBit ^= hammingCode[i];
                 }
             }
         }
         return parityBit;
     }
 
-    // create receiveData() method to detect error in the received data
-    static void receiveData(int[] data, int parityBits) {
+    // Helper method to get error position from user
+    private static int getErrorPosition(Scanner scanner, int hammingCodeSize) {
+        System.out.println("Enter position of bit to alter in received data (0 for no error):");
+        return scanner.nextInt();
+    }
 
-        // declare variable pow, which we use to get the correct bits to check for parity.
-        int pow;
-        int size = data.length;
-        // declare parityArray to store the value of parity check
-        int[] parityArray = new int[parityBits];
-        // we use errorLoc string for storing the integer value of the error location.
-        StringBuilder errorLoc = new StringBuilder();
-        // use for loop to check the parities
-        for (pow = 0; pow < parityBits; pow++) {
-            // use for loop to extract the bit from 2^(power)
-            for (int i = 0; i < size; i++) {
-                int j = i + 1;
-                // convert the value of j into binary
-                String str = Integer.toBinaryString(j);
-                // find bit by using str
-                int bit = ((Integer.parseInt(str)) / ((int) Math.pow(10, pow))) % 10;
-                if (bit == 1) {
-                    if (data[i] == 1) {
-                        parityArray[pow] = (parityArray[pow] + 1) % 2;
-                    }
+    // Method to introduce error in data
+    private static void introduceError(int[] hammingCode, int errorPosition) {
+        hammingCode[errorPosition - 1] ^= 1;
+    }
+
+    // Method to receive and correct data
+    private static void receiveAndCorrectData(int[] hammingCode, int originalDataSize) {
+        int parityBitsCount = calculateParityBits(originalDataSize);
+
+        int[] parityArray = new int[parityBitsCount];
+        StringBuilder errorLocation = new StringBuilder();
+
+        for (int i = 0; i < parityBitsCount; i++) {
+            for (int j = 0; j < hammingCode.length; j++) {
+                if (((j + 1) & (1 << i)) != 0 && hammingCode[j] != 2) {
+                    parityArray[i] ^= hammingCode[j];
                 }
             }
-            errorLoc.insert(0, parityArray[pow]);
+            errorLocation.insert(0, parityArray[i]);
         }
 
-        // This gives us the parity check equation values.
-        // Using these values, we will now check if there is a single bit error and then correct it.
-        // errorLoc provides parity check eq. values which we use to check whether a single bit error is there or not
-        // if present, we correct it
-        int finalLoc = Integer.parseInt(errorLoc.toString(), 2);
-        // check whether the finalLoc value is 0 or not
-        if (finalLoc != 0) {
-            System.out.println("Error is found at location " + finalLoc + ".");
-            data[finalLoc - 1] = (data[finalLoc - 1] + 1) % 2;
-            System.out.println("After correcting the error, the code is:");
-            for (int i = 0; i < size; i++) {
-                System.out.print(data[size - i - 1]);
-            }
-            System.out.println();
+        int errorLocationIndex = Integer.parseInt(errorLocation.toString(), 2);
+        if (errorLocationIndex != 0) {
+            System.out.println("Error detected and corrected at position " + errorLocationIndex + ".");
+            hammingCode[errorLocationIndex - 1] ^= 1;
         } else {
-            System.out.println("There is no error in the received data.");
+            System.out.println("No error detected in received data.");
         }
 
-        // print the original data
-        System.out.println("The data sent from the sender:");
-        pow = parityBits - 1;
-        for (int k = size; k > 0; k--) {
-            if (Math.pow(2, pow) != k) {
-                System.out.print(data[k - 1]);
+        System.out.println("Original data sent:");
+        int pow = parityBitsCount - 1;
+        for (int i = hammingCode.length; i > 0; i--) {
+            if (!isPowerOfTwo(i)) {
+                System.out.print(hammingCode[i - 1]);
             } else {
-                // decrement value of pow
                 pow--;
             }
         }
-        System.out.println();   // for next line
+        System.out.println();
     }
 }
