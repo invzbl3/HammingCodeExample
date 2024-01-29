@@ -15,19 +15,22 @@ public class HammingCodeExample {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Enter the data size (number of bits):");
+        System.out.println("Enter the bits size for the data:");
         int dataSize = scanner.nextInt();
 
         int[] data = getDataFromUser(scanner, dataSize);
-        printData("Data entered by user:", data);
+        System.out.println("The data which you enter is:");
+        printData(data);
 
         int[] hammingCode = generateHammingCode(data);
-        printData("Hamming code generated:", hammingCode);
+        System.out.println("The hamming code generated for your data is:");
+        printData(hammingCode);
 
-        int errorPosition = getErrorPosition(scanner, hammingCode.length);
+        System.out.println("For detecting error at the receiver end, enter position of a bit to alter original data:");
+        int errorPosition = scanner.nextInt();
         if (errorPosition != 0) {
             introduceError(hammingCode, errorPosition);
-            System.out.println("Data after introducing error:");
+            System.out.println("Sent Data is:");
             printData(hammingCode);
         }
 
@@ -127,6 +130,7 @@ public class HammingCodeExample {
         int[] parityArray = new int[parityBitsCount];
         StringBuilder errorLocation = new StringBuilder();
 
+        // Calculate the parity bits from the received Hamming code
         for (int i = 0; i < parityBitsCount; i++) {
             for (int j = 0; j < hammingCode.length; j++) {
                 if (((j + 1) & (1 << i)) != 0 && hammingCode[j] != 2) {
@@ -136,15 +140,28 @@ public class HammingCodeExample {
             errorLocation.insert(0, parityArray[i]);
         }
 
+        // Convert error location to index
         int errorLocationIndex = Integer.parseInt(errorLocation.toString(), 2);
         if (errorLocationIndex != 0) {
-            System.out.println("Error detected and corrected at position " + errorLocationIndex + ".");
+            System.out.println("Error detected at location " + errorLocationIndex + ".");
+            // Correct the bit
             hammingCode[errorLocationIndex - 1] ^= 1;
         } else {
             System.out.println("No error detected in received data.");
         }
 
-        System.out.println("Original data sent:");
+        // Print the received data
+        System.out.println("Received Data is:");
+        printData(hammingCode);
+
+        // Print the corrected data
+        if (errorLocationIndex != 0) {
+            System.out.println("After correcting the error, the code is:");
+            printData(hammingCode);
+        }
+
+        // Print the original data sent
+        System.out.println("The data sent from the sender:");
         int pow = parityBitsCount - 1;
         for (int i = hammingCode.length; i > 0; i--) {
             if (!isPowerOfTwo(i)) {
