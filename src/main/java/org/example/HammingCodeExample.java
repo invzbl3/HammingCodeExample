@@ -46,15 +46,20 @@ public class HammingCodeExample {
         return data;
     }
 
-    // Helper method to print data
+    // Helper method to print data with a message
     private static void printData(String message, int[] data) {
         System.out.println(message);
+        printData(data);
+    }
+
+    // Overloaded helper method to print data without a message
+    private static void printData(int[] data) {
         for (int bit : data) {
             System.out.print(bit);
         }
         System.out.println();
     }
-
+    
     // Method to generate Hamming code
     private static int[] generateHammingCode(int[] data) {
         int dataSize = data.length;
